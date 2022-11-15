@@ -1,11 +1,12 @@
 <?xml version="1.0"?>
 <Configuration xmlns="http://www.jdiameter.org/jdiameter-server">
     <LocalPeer>
-        <URI value="aaa://192.168.1.100:3868" />
+        <URI value="aaa://dra:3868" />
         <IPAddresses>
-            <IPAddress value="192.168.1.100" />
+            <IPAddress value="dra" />
+            <!--IPAddress value="192.168.0.106" /-->
         </IPAddresses>
-        <Realm value="test.org" />
+        <Realm value="restcomm.org" />
         <VendorID value="10415" />
         <ProductName value="Location Server Simulator" />
         <FirmwareRevision value="1" />
@@ -20,10 +21,10 @@
             </ApplicationID>
             <ApplicationID>
                 <VendorId value="10415" />
-                <AuthApplId value="16777251" />
+                <AuthApplId value="16777217" />
             </ApplicationID>
             <ApplicationID>
-                <VendorId value="0" />
+                <VendorId value="10415" />
                 <AuthApplId value="16777251" />
             </ApplicationID>
         </Applications>
@@ -46,18 +47,30 @@
     </Parameters>
     <Network>
         <Peers>
-            <!--<Peer name="aaa://192.168.0.110:3868" attempt_connect="false" rating="1" /> -->
-
-
-            <Peer name="aaa://192.168.1.101:8022" attempt_connect="true" rating="1" standby_addresses=""/>
-            <Peer name="aaa://192.168.0.107:8022" attempt_connect="true" rating="1" standby_addresses=""/>
+            <Peer name="aaa://gmlc:3868" attempt_connect="false" rating="1" standby_addresses=""/>
+            <Peer name="aaa://dra.simulator:23868" attempt_connect="true" rating="1" standby_addresses=""/>
+            <Peer name="aaa://hss.simulator:13868" attempt_connect="true" rating="1" standby_addresses=""/>
 
         </Peers>
         <Realms>
-            <Realm name="abc.org" peers="192.168.1.101"  local_action="LOCAL" dynamic="true" exp_time="1" >
+            <Realm name="restcomm.org" peers="dra.simulator,hss.simulator,gmlc"  local_action="LOCAL" dynamic="true" exp_time="1" >
                 <ApplicationID>
                     <VendorId value="10415" />
                     <AuthApplId value="16777255" />
+                    <AcctApplId value="0" />
+                </ApplicationID>
+            </Realm>
+            <Realm name="restcomm.org" peers="dra.simulator,hss.simulator,gmlc"  local_action="LOCAL" dynamic="true" exp_time="1" >
+                <ApplicationID>
+                    <VendorId value="10415" />
+                    <AuthApplId value="16777291" />
+                    <AcctApplId value="0" />
+                </ApplicationID>
+            </Realm>
+            <Realm name="restcomm.org" peers="dra.simulator,hss.simulator,gmlc"  local_action="LOCAL" dynamic="true" exp_time="1" >
+                <ApplicationID>
+                    <VendorId value="10415" />
+                    <AuthApplId value="16777217" />
                     <AcctApplId value="0" />
                 </ApplicationID>
             </Realm>
