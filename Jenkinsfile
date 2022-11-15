@@ -13,7 +13,7 @@ pipeline {
     parameters {
         string(name: 'NAIKERI_DRA_MAJOR_VERSION', defaultValue: '2.1.0', description: 'The major version for Naikeri DRA')
         string(name: 'SGW_VERSION', defaultValue: '2.1.1', description: 'The version to use for Naikeri Signaling Gateway')
-        string(name: 'SGW_BUILD', defaultValue: '11', description: 'The build number for Naikeri Signaling Gateway')
+        string(name: 'SGW_BUILD', defaultValue: '12', description: 'The build number for Naikeri Signaling Gateway')
         string(name: 'SCTP_VERSION', defaultValue: '2.1.0', description: 'The version number for Naikeri SCTP')
         string(name: 'SCTP_BUILD', defaultValue: '17', description: 'The build number for Naikeri SCTP')
         string(name: 'JDIAMETER_VERSION', defaultValue: '2.0.0', description: 'The major version for the Naikeri jDIAMETER')

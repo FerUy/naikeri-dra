@@ -12,7 +12,7 @@
 
 
     <!-- NAIKERI_SG_VERSION 2.1.0-1 -->
-    <property name="sg.build-number" value="1" />
+    <property name="sg.build-number" value="12" />
     <property name="sg.version" value="2.1.0" />
     <property name="naikeri-sgw-version" value="${sg.version}-${sg.build-number}" />
 

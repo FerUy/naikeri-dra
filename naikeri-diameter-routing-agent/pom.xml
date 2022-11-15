@@ -62,7 +62,7 @@
         <dependency>
             <groupId>com.naikeri</groupId>
             <artifactId>naikeri-signaling-gateway-core</artifactId>
-            <version>2.1.1-11</version>
+            <version>2.1.1-12</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
