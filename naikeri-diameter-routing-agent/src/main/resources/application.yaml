@@ -1,4 +1,4 @@
 # database connection
-url: jdbc:postgresql://172.31.8.66:5432/postgres?currentSchema=signaling-gateway
+url: jdbc:postgresql://127.0.0.1:5432/postgres?currentSchema=signaling-gateway
 user: postgres
 password: naikeri
