@@ -28,6 +28,8 @@
         <commons-pool.version>1.5.5</commons-pool.version>
         <postgresql.version>42.7.12</postgresql.version>
         <jackson-dataformat-yaml.version>2.22.2</jackson-dataformat-yaml.version>
+        <jakarta.xml.bind-api.version>4.0.4</jakarta.xml.bind-api.version>
+        <jaxb-runtime.version>4.0.7</jaxb-runtime.version>
     </properties>
 
     <distributionManagement>
@@ -77,43 +79,17 @@
             <version>4.0.0</version>
         </dependency>
 
-        <!-- https://mvnrepository.com/artifact/jakarta.xml.bind -->
+        <!-- Jakarta XML Binding: API plus the Eclipse implementation (jaxb-runtime brings jakarta.activation) -->
         <dependency>
             <groupId>jakarta.xml.bind</groupId>
             <artifactId>jakarta.xml.bind-api</artifactId>
-            <version>4.0.0</version>
+            <version>${jakarta.xml.bind-api.version}</version>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/jakarta.activation -->
-        <dependency>
-            <groupId>jakarta.activation</groupId>
-            <artifactId>jakarta.activation-api</artifactId>
-            <version>2.1.0</version>
-        </dependency>
-
-        <!-- https://mvnrepository.com/artifact/org.glassfish.jaxb/jaxb-runtime -->
         <dependency>
             <groupId>org.glassfish.jaxb</groupId>
             <artifactId>jaxb-runtime</artifactId>
-            <version>2.3.1</version>
-        </dependency>
-
-        <!-- https://mvnrepository.com/artifact/com.sun.xml.bind/jaxb-impl -->
-        <dependency>
-            <groupId>com.sun.xml.bind</groupId>
-            <artifactId>jaxb-impl</artifactId>
-            <version>4.0.0-M1</version>
-        </dependency>
-        <dependency>
-            <groupId>com.sun.xml.bind</groupId>
-            <artifactId>jaxb-core</artifactId>
-            <version>4.0.0-M1</version>
-        </dependency>
-
-        <!-- https://mvnrepository.com/artifact/javax.activation/activation -->
-        <dependency>
-            <groupId>javax.activation</groupId>
-            <artifactId>activation</artifactId>
-            <version>1.1.1</version>
+            <version>${jaxb-runtime.version}</version>
+            <scope>runtime</scope>
         </dependency>
 
     </dependencies>

@@ -1,6 +1,5 @@
 package com.naikeri.sgw.configuration.dto;
 
-import com.sun.xml.txw2.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlAttribute;
