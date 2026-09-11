@@ -1,0 +1,13 @@
+[[_setup_configuration]]
+= Post Installation Configuration
+
+== Memory Settings
+
+You should fine tune the JVM memory settings based on your needs, but we recommend you allocate ideally 8 GB for initial and maximum heap size.
+
+-Xms8192m::
+  Initial heap size, set in megabytes
+
+-Xmx8192m::
+  Maximum heap size, set in megabytes
+

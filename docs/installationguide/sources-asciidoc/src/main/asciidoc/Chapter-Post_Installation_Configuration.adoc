@@ -1,0 +1,90 @@
+[[_setup_configuration]]
+= Post Installation Configuration
+
+You must perform post-installation configuration of the Gateway according to instructions in the {this-platform} {this-application} Admin Guide.
+Before using in Production, you must remember to fine-tune Memory and Database settings for better performance.
+
+Once you have installed {this-platform} {this-application} to suit your needs, you can go ahead and configure the Diameter stack and the Gateway to meet your requirements.
+Only when you have completely configured the Diameter stacks, you can go ahead with further configurations for running {this-platform} {this-application}.
+
+The {this-platform} {this-application} Admin Guide will assist you in configuring and managing {this-platform} {this-application}.
+To configure and manage both stacks and the Gateway, you can make use of the Command Line Interface (CLI) tool or the GUI that comes with the platform.
+
+[[_dra_configuring]]
+== Configuring {this-platform} {this-application}
+
+You must fine-tune Memory and Database settings for better performance before using {this-platform} {this-application} in production.
+
+Once you complete setting up the Gateway you must configure the Diameter Stack and DRA parameters.
+{this-platform} {this-application} comes with a convenient user-friendly Graphical User Interface (GUI) and a Command Line Interface (CLI) that will allow you to configure, monitor and manage the Gateway.
+While the CLI tool allows complete configuration and control of {this-platform} {this-application}, the GUI-based management enhances the usability of the Gateway and gives you the ability to configure and manage {this-platform} {this-application} dynamically.
+
+This chapter will explain how to manage {this-platform} {this-application} effectively using both the GUI and the CLI.
+
+[[_dra_configuring_memory]]
+=== Memory Settings
+
+You should fine tune the JVM memory settings based on your needs, but we recommend you allocate a minimum of 4 GB and an ideal 8GB for initial and maximum heap size.
+These settings are specified in the `java -Xms -Xmx` options in [path]_Naikeri-DRA-<version>/bin/start.sh_.
+
+-Xms8192m::
+  Initial heap size, set in megabytes
+
+-Xmx8192m::
+  Maximum heap size, set in megabytes
+
+[[_dra_configuring_java]]
+=== Supported Java Version
+
+{this-platform} {this-application} requires a Java 11 JRE or JDK.
+
+[[_dra_configuring_log4j]]
+=== Configuring the Logging Service
+
+{this-platform} {this-application} logs through `Apache Log4j 2`.
+The SS7 and Diameter stacks it is built on call the Log4j 2 API directly, while the agent's own code and
+the Diameter stack use SLF4J; both are routed to Log4j 2, so a single configuration file controls all of them.
+
+Logging is configured in [path]_Naikeri-DRA-<version>/conf/log4j2.xml_, which [path]_bin/start.sh_ passes to the
+JVM as `-Dlog4j2.configurationFile=../conf/log4j2.xml`.
+The file defines a rolling file appender and a console appender, the message pattern, and the level per logger.
+The file appender writes to [path]_/var/log/naikeri/dra/dra.log_ and rolls daily, keeping 30 days of compressed
+archives capped at 1 GB in total; set `-DLOG_HOME=<directory>` in [path]_start.sh_ to write elsewhere.
+For more details, please refer to the https://logging.apache.org/log4j/2.x/manual/configuration.html[Log4j 2
+configuration manual].
+
+The configuration is re-read every 10 seconds (`monitorInterval="10"`), so levels can be changed on a running
+agent without restarting it.
+
+You must make sure logging is fine tuned for optimal performance in production.
+The shipped file logs `com.naikeri` at `DEBUG` and everything else at `INFO`.
+We recommend that you raise `com.naikeri` to `INFO` or `WARN` in production, since `DEBUG` renders every MAP and
+Diameter message and includes the class, method and line number of each call site.
+
+[[_dra_configuring_jdiameter]]
+=== Configuring the Diameter Stack
+You must configure the Diameter Stack prior to running {this-platform} {this-application}.
+The stack is configured in [path]_Naikeri-DRA-<version>/conf/diameter-server.xml_, which defines the local peer,
+its realm and the peers to connect to.
+Furthermore, you can find a Diameter configuration example in {this-platform} {this-application} installation guide.
+
+== Diameter Configuration
+
+Next table depicts the parameters to be provided by the MNO in order to establish Diameter based connections according to the topology diagram shown in the following network topology diagram example.
+
+[width="100%",cols="50%,50%"]
+|=======================================================================
+|PARAMETER | DESCRIPTION
+| Host IP | Diameter IP address(es) to be assigned to {this-platform} {this-application}.
+| Host Port | Diameter port number(s) to be assigned to {this-platform} {this-application}.
+| Host Realm | The string(s) in the Network Access Identifier (NAI) that immediately follows the "@" character to be assigned to {this-platform} {this-application}.
+| Host User Name | The string(s) which contains the User-Name in a format consistent with the NAI specification to be assigned to {this-platform} {this-application}.
+| Host Number | Diameter number to be assigned to {this-platform} {this-application}.
+| Peer IP(s) | Diameter IP address(es) of {this-platform} {this-application} peer (DSC or DRA or DEA or IWF).
+| Peer Port(s) | Diameter port number(s) of {this-platform} {this-application} peer (DSC or DRA or DEA or IWF).
+| Peer Port Range | Port range to use for establishing SCTP associations.
+| Peer Realm(s) | The string(s) in the DSC/DRA/DEA/IWF Network Access Identifier (NAI) that immediately follows the "@" character.
+| Peer User Name(s) | The string(s) which contains the DSC/DRA/DEA/IWF User-Name in a format consistent with the NAI specification.
+|=======================================================================
+
+DSC (Diameter Signaling Controller) is an industry term which assembles multiple roles of the signaling or control plane in LTE networks. These roles include the ones of the DRA (Diameter Routing Agent), DEA (Diameter Edge Agent) and IWF (Diameter Interworking Function), defined by 3GPP and GSMA. DSC is used for providing the same carrier-grade infrastructure in the EPC as the STP in SS7 networks. DRA provides traffic management, load balancing and session binding while reducing the ?mesh? of signaling connections across multiple network elements. Some operators prefer the stand-alone DRA, typically Tier 1 ones with multiple instances of network elements like the HSS, PCRF, PCEF and OCS. The Diameter Interworking Function (IWF) allows 4G networks to interoperate with 3G network elements. The DEA provides an interworking capability for Diameter and SS7 and acts as an edge device for LTE roaming. The functions of the DSC, as a pure software system, lend themselves well to the SDN and NFV (Software Defined Network and Network Functions Virtualization), which provide better ways to monetize infrastructure by having their control plane managed in the cloud and thus better CAPEX ROI, lowering OPEX.
