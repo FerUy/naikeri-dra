@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Logging for the Naikeri DRA, all through log4j2:
+    - DRA code, Signaling Gateway, jDiameter: SLF4J API, routed by log4j-slf4j2-impl
+    - jSS7, SCTP, licensor: log4j2 API directly
+    - jDiameter cluster/HA jars: log4j 1.x API, routed by log4j-1.2-api
+  start.sh passes -Dlog4j2.configurationFile=../conf/log4j2.xml. LOG_HOME can be overridden with -DLOG_HOME=<dir>.
+  The file is re-read every 10 seconds, so levels can be changed without a restart.
+-->
+<Configuration status="warn" monitorInterval="10">
+    <Properties>
+        <Property name="LOG_FILE">dra</Property>
+        <Property name="LOG_HOME">${sys:LOG_HOME:-/var/log/naikeri/dra}</Property>
+    </Properties>
+
+    <Appenders>
+        <RollingFile name="file" fileName="${LOG_HOME}/${LOG_FILE}.log" filePattern="${LOG_HOME}/${LOG_FILE}.%d{yyyy-MM-dd}.log.gz">
+            <PatternLayout charset="UTF-8" pattern="(%d{yyyy-MM-dd HH:mm:ss}) %-5level [%t] [%C{1}] %c.%M(%C{1}.java:%L) %msg%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy/>
+            </Policies>
+            <DefaultRolloverStrategy>
+                <!-- keep 30 days of archives, capped at 1 GB in total -->
+                <Delete basePath="${LOG_HOME}" maxDepth="1">
+                    <IfFileName glob="${LOG_FILE}.*.log.gz">
+                        <IfAny>
+                            <IfLastModified age="30d"/>
+                            <IfAccumulatedFileSize exceeds="1 GB"/>
+                        </IfAny>
+                    </IfFileName>
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+
+        <Console name="console" target="SYSTEM_OUT">
+            <PatternLayout charset="UTF-8" noConsoleNoAnsi="true" pattern="%d{yyyy-MM-dd HH:mm:ss} %highlight{%-5level} [%t] %c:%L - %msg%n"/>
+        </Console>
+    </Appenders>
+
+    <Loggers>
+        <!-- DRA and Signaling Gateway code (com.naikeri.sgw) at DEBUG, as before -->
+        <Logger name="com.naikeri" level="debug"/>
+        <!-- everything else, including jSS7 and jDiameter, at INFO -->
+        <Root level="info">
+            <AppenderRef ref="console"/>
+            <AppenderRef ref="file"/>
+        </Root>
+    </Loggers>
+</Configuration>
