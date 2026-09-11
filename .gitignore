@@ -185,3 +185,7 @@ xpp3/
 *.tar.gz
 *.rar
 
+
+# Keep every directory inside a source tree visible: the bare directory names above
+# (log4j/ and the like) otherwise also hide source packages and doc folders with the same name.
+!**/src/**/
