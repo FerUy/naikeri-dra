@@ -48,13 +48,35 @@ the Diameter stack use SLF4J; both are routed to Log4j 2, so a single configurat
 Logging is configured in [path]_Naikeri-DRA-<version>/conf/log4j2.xml_, which [path]_bin/start.sh_ passes to the
 JVM as `-Dlog4j2.configurationFile=../conf/log4j2.xml`.
 The file defines a rolling file appender and a console appender, the message pattern, and the level per logger.
-The file appender writes to [path]_/var/log/naikeri/dra/dra.log_ and rolls daily, keeping 30 days of compressed
-archives capped at 1 GB in total; set `-DLOG_HOME=<directory>` in [path]_start.sh_ to write elsewhere.
 For more details, please refer to the https://logging.apache.org/log4j/2.x/manual/configuration.html[Log4j 2
 configuration manual].
 
 The configuration is re-read every 10 seconds (`monitorInterval="10"`), so levels can be changed on a running
 agent without restarting it.
+
+[IMPORTANT]
+====
+The file appender writes to [path]_/var/log/naikeri/dra/dra.log_.
+That directory is not created by the installation, and Log4j 2 cannot create it itself under
+[path]_/var/log_ unless the agent runs as `root`, so you must create it and give it to the account that runs
+the agent before the first start:
+
+----
+sudo mkdir -p /var/log/naikeri/dra
+sudo chown <user>:<group> /var/log/naikeri/dra
+----
+
+If the directory is missing or not writable, the agent still starts and still serves traffic, but it writes no
+log file at all: the failure is reported only on the console.
+To write elsewhere, set `-DLOG_HOME=<directory>` in [path]_start.sh_.
+====
+
+The log file rolls daily, keeping 30 days of compressed archives capped at 1 GB in total.
+
+[path]_start.sh_ appends the agent's console output to [path]_Naikeri-DRA-<version>/logs/console.out_.
+Anything logged before [path]_log4j2.xml_ is read, and any error in the logging configuration itself, appears
+only there, so that is the first file to check when the agent starts but produces no log.
+It is not rotated; truncate or remove it between restarts if it grows.
 
 You must make sure logging is fine tuned for optimal performance in production.
 The shipped file logs `com.naikeri` at `DEBUG` and everything else at `INFO`.
