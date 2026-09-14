@@ -73,7 +73,8 @@ To write elsewhere, set `-DLOG_HOME=<directory>` in [path]_start.sh_.
 
 The log file rolls daily, keeping 30 days of compressed archives capped at 1 GB in total.
 
-[path]_start.sh_ appends the agent's console output to [path]_Naikeri-DRA-<version>/logs/console.out_.
+[path]_start.sh_ shows the agent's console output on the terminal and appends a copy to
+[path]_Naikeri-DRA-<version>/logs/console.out_.
 Anything logged before [path]_log4j2.xml_ is read, and any error in the logging configuration itself, appears
 only there, so that is the first file to check when the agent starts but produces no log.
 It is not rotated; truncate or remove it between restarts if it grows.
