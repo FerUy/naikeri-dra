@@ -66,7 +66,7 @@ public class DataSource implements RealmRepository {
 
             List<T> result = new ArrayList<>();
             while (rs.next()) {
-                T entity = classEntity.newInstance();
+                T entity = classEntity.getDeclaredConstructor().newInstance();
                 setValues(entity, fields, rs);
                 result.add(entity);
             }
@@ -95,7 +95,7 @@ public class DataSource implements RealmRepository {
                     field.set(entity, rs.getObject(field.getName()));
                 }
             } else if (!field.getType().getClass().equals(List.class)) {
-                Object subEntity = field.getType().newInstance();
+                Object subEntity = field.getType().getDeclaredConstructor().newInstance();
                 Field[] subFields = subEntity.getClass().getDeclaredFields();
                 setValues(subEntity, subFields, rs);
                 field.set(entity, subEntity);

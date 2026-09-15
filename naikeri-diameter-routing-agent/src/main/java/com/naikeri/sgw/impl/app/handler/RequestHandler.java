@@ -20,21 +20,20 @@ public class RequestHandler { // extends Thread {
 
     private static final Logger logger = LoggerFactory.getLogger(RequestHandler.class);
     private static final Long EXPIRE_AFTER = 30000L;
-    public static Map<String, Map<String, Object>> requests = Collections.synchronizedMap(new HashMap<>());
+    public static final Map<String, Map<String, Object>> requests = Collections.synchronizedMap(new HashMap<>());
 
     private static RequestHandler instance = null;
     private static DiameterLayer diameter = null;
 
-    private static RequestHandler getInstance(DiameterLayer diameterLayer) {
+    private static synchronized void getInstance(DiameterLayer diameterLayer) {
         if (instance == null) {
-            instance = new RequestHandler();
             diameter = diameterLayer;
+            instance = new RequestHandler();
         }
-        return instance;
     }
 
-    public static RequestHandler initialize(DiameterLayer diameterLayer) {
-        return RequestHandler.getInstance(diameterLayer);
+    public static void initialize(DiameterLayer diameterLayer) {
+        RequestHandler.getInstance(diameterLayer);
     }
 
     public RequestHandler() {
@@ -43,11 +42,10 @@ public class RequestHandler { // extends Thread {
             @Override
             public void run() {
                 try {
-                    logger.debug(String.format("Executing task at [%s]", new Date()));
+                    logger.debug("Executing task at [{}]", new Date());
                     int sessionLength = requests.size();
                     if (removeIf(f -> ((long) f.getValue().get("dateExpire")) < System.currentTimeMillis())) {
-                        logger.info(String.format("Deleting '%d' out of '%d' sessions",
-                                (sessionLength - requests.size()), requests.size()));
+                        logger.info("Deleting '{}' out of '{}' sessions", (sessionLength - requests.size()), sessionLength);
                     }
                 } catch (Exception e) {
                     logger.error("Exception caught while aging sessions! ", e);
@@ -59,9 +57,9 @@ public class RequestHandler { // extends Thread {
     private boolean removeIf(Predicate<? super Map.Entry<String, Map<String, Object>>> filter) {
         Objects.requireNonNull(filter);
         boolean removed = false;
-        final Iterator<Map.Entry<String, Map<String, Object>>> each = requests.entrySet().iterator();
         synchronized (requests) {
-            while (each != null && each.hasNext()) {
+            final Iterator<Map.Entry<String, Map<String, Object>>> each = requests.entrySet().iterator();
+            while (each.hasNext()) {
                 final Map.Entry<String, Map<String, Object>> item = each.next();
                 if (filter.test(item)) {
                     each.remove();
@@ -80,24 +78,27 @@ public class RequestHandler { // extends Thread {
 
     public static void addRequest(Request request) {
         String key = getKey(request.getSessionId(), request.getEndToEndIdentifier());
-        if (!requests.containsKey(key))
-            requests.put(key, new HashMap<String, Object>() {{
-                put("request", request);
-                put("dateExpire", System.currentTimeMillis() + EXPIRE_AFTER);
-            }});
+        synchronized (requests) {
+            if (!requests.containsKey(key)) {
+                Map<String, Object> entry = new HashMap<>();
+                entry.put("request", request);
+                entry.put("dateExpire", System.currentTimeMillis() + EXPIRE_AFTER);
+                requests.put(key, entry);
+            }
+        }
     }
 
     public static Request getRequest(String sessionId, long endToEndIdentifier) {
         Request request = null;
         String key = getKey(sessionId, endToEndIdentifier);
-        if (requests.containsKey(key)) {
-            //request = (Request) requests.remove(sessionId).get("request");
-            request = (Request) requests.get(key).get("request");
+        Map<String, Object> entry = requests.get(key);
+        if (entry != null) {
+            request = (Request) entry.get("request");
             if (request == null) {
-                logger.error(String.format("Recovered null value for sessionId '%s' from request cache", sessionId));
+                logger.error("Recovered null value for sessionId '{}' from request cache", sessionId);
             }
         } else {
-            logger.error(String.format("Unable to find sessionId '%s' in request cache!", sessionId));
+            logger.error("Unable to find sessionId '{}' in request cache!", sessionId);
         }
 
         return request;

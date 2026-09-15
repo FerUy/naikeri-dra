@@ -48,8 +48,8 @@ public class DraApplication extends Application {
         List<String> previousHost = new ArrayList<>();
         try {
             Request request = (Request) channelMessage.getParameter("REQUEST");
-            logger.info(String.format("Processing request with sessionId '%s' using transactionId '%s' from originId '%s'",
-                    request.getSessionId(), channelMessage.getTransactionId(), channelMessage.getOriginId()));
+            logger.info("Processing request with sessionId '{}' using transactionId '{}' from originId '{}'",
+                    request.getSessionId(), channelMessage.getTransactionId(), channelMessage.getOriginId());
 
             // Create request and configure avps
             //Request msg = new MessageParser().createEmptyMessage(request.getCommandCode(), request.getApplicationId());
@@ -76,8 +76,8 @@ public class DraApplication extends Application {
                             continue;
                         }
                         String imsi = getImsi(rule, avps);
-                        logger.info(String.format("No routing host with the following data: rule '%s' imsi '%s'",
-                                rule.getName(), imsi));
+                        logger.info("No routing host with the following data: rule '{}' imsi '{}'",
+                                rule.getName(), imsi);
 
                         // drop-policy  // no-routing
                         processDropPolicy(channelMessage, request, "no-routing");
@@ -121,7 +121,7 @@ public class DraApplication extends Application {
                     channelMessage.setParameter("FORWARDING", answer);
                     channelMessage.setParameter("END_SESSION", false);
                     int response = channelHandler.sendMessageResponse(channelMessage);
-                    logger.info(String.format("Send message response result '%d' for sessionId '%s'", response, answer.getSessionId()));
+                    logger.info("Send message response result '{}' for sessionId '{}'", response, answer.getSessionId());
                     if (response == SUCCESSFUL_RESPONSE) {
                         break;
                     } else if (rule.getFallbackPolicy().contains((response == NETWORK_ERROR ? "network" : response == FAILED_RESPONSE ? "error" : "unknown"))) {
@@ -132,7 +132,7 @@ public class DraApplication extends Application {
                         rule.getFallbackPolicy().forEach(value -> {
                             // TODO this should be checked on loading just once
                             if (!Arrays.asList("error", "network").contains(value)) {
-                                logger.warn(String.format("The value '%s' of the fallback-policy attribute is not valid", value));
+                                logger.warn("The value '{}' of the fallback-policy attribute is not valid", value);
                             }
                         });
                         break;
@@ -156,8 +156,8 @@ public class DraApplication extends Application {
             channelMessage.setParameter("END_SESSION", true);
             channelHandler.sendMessageResponse(channelMessage);
         } else {
-            logger.warn(String.format("Omitting request message '%s' for transactionId '%s' from origin '%s' due to no matching rule found",
-                    request.getSessionId(), channelMessage.getTransactionId(), channelMessage.getOriginId()));
+            logger.warn("Omitting request message '{}' for transactionId '{}' from origin '{}' due to no matching rule found",
+                    request.getSessionId(), channelMessage.getTransactionId(), channelMessage.getOriginId());
         }
     }
 
@@ -168,8 +168,8 @@ public class DraApplication extends Application {
         try {
             request = (Request) channelMessage.getParameter("REQUEST");
             answer = (Answer) channelMessage.getParameter("ANSWER");
-            logger.info(String.format("Processing answer with sessionId '%s' corresponding to request '%s' using transactionId '%s' from originId '%s'",
-                    answer.getSessionId(), request.getSessionId(), channelMessage.getTransactionId(), channelMessage.getOriginId()));
+            logger.info("Processing answer with sessionId '{}' corresponding to request '{}' using transactionId '{}' from originId '{}'",
+                    answer.getSessionId(), request.getSessionId(), channelMessage.getTransactionId(), channelMessage.getOriginId());
             Answer forwardAnswer = request.createAnswer();
             if (forwardAnswer != null) {
                 request.getAvps().removeAvp(Avp.AUTH_APPLICATION_ID);
@@ -181,12 +181,12 @@ public class DraApplication extends Application {
                 channelMessage.setParameter("END_SESSION", true);
                 channelHandler.sendMessageResponse(channelMessage);
             } else {
-                logger.error(String.format("Unable to create answer for transactionId '%s'", channelMessage.getTransactionId()));
+                logger.error("Unable to create answer for transactionId '{}'", channelMessage.getTransactionId());
             }
         } catch (Exception e) {
-            logger.error(String.format("Exception '%s' caught while processing answer for transactionId '%s' from origin '%s', request '%s', answer '%s'",
-                    e.getMessage(), channelMessage.getTransactionId(), channelMessage.getOriginId(),
-                    ((request == null) ? "null" : request.getSessionId()), ((answer == null) ? "null" : answer.getSessionId())));
+            logger.error("Caught exception while processing answer for transactionId '{}' from origin '{}', request '{}', answer '{}'",
+                    channelMessage.getTransactionId(), channelMessage.getOriginId(),
+                    ((request == null) ? "null" : request.getSessionId()), ((answer == null) ? "null" : answer.getSessionId()), e);
         }
     }
 
@@ -205,22 +205,21 @@ public class DraApplication extends Application {
                             && rule.match().destinationRealm().matcher(destinationRealm).matches()
                             && (destinationHost == null || rule.match().destinationHost().matcher(destinationHost).matches()));
                     if (match)
-                        logger.debug(String.format("Match in rule [%s] with the following data: imsi[%s] match imsi[%s] " +
-                                        "originHost[%s] match host%s originRealm[%s] match realm[%s]",
-                                rule.getName(), imsi[0], rule.match().imsi().toString(), originHost, rule.match().originHost().pattern(),
-                                originRealm, rule.match().originRealm().pattern()));
+                        logger.debug("Match in rule [{}] with the following data: imsi[{}] match imsi[{}] " +
+                                        "originHost[{}] match host[{}] originRealm[{}] match realm[{}]",
+                                rule.getName(), imsi[0], rule.match().imsi(), originHost, rule.match().originHost().pattern(),
+                                originRealm, rule.match().originRealm().pattern());
                     return match;
                 })
                 .findFirst();
         if (ruleOptional.isPresent()) {
-            Rule rule = ruleOptional.get();
-            return rule;
+            return ruleOptional.get();
         } else {
             // verify if exist default rule
             Rule defaultRule = getDefaultRule();
             if (defaultRule != null) return defaultRule;
         }
-        logger.info(String.format("No matching rule for imsi '%s', originHost '%s' originRealm '%s'", imsi[0], originHost, originRealm));
+        logger.info("No matching rule for imsi '{}', originHost '{}' originRealm '{}'", imsi[0], originHost, originRealm);
         return null;
     }
 
@@ -238,7 +237,7 @@ public class DraApplication extends Application {
             if (!rule.match().isSubscriptionId()) {
                 imsi = avps.getAvp(Avp.TGPP_IMSI);
                 if (imsi == null) {
-                    logger.debug(String.format("No IMSI found in [Avp.TGPP_IMSI], rule name=[%s]", rule.getName()));
+                    logger.debug("No IMSI found in [Avp.TGPP_IMSI], rule name=[{}]", rule.getName());
                     return "";
                 }
             } else {
@@ -252,7 +251,7 @@ public class DraApplication extends Application {
                     }
                 }
                 if (imsi == null) {
-                    logger.debug(String.format("No IMSI found in [Avp.SUBSCRIPTION_ID_DATA], rule name=[%s]", rule.getName()));
+                    logger.debug("No IMSI found in [Avp.SUBSCRIPTION_ID_DATA], rule name=[{}]", rule.getName());
                     return "";
                 }
             }

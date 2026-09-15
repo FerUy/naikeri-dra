@@ -28,11 +28,11 @@ public class DraChannel extends ChannelHandler {
     public final static int FAILED_RESPONSE = -2;
     public final static int NETWORK_ERROR = -1;
     public final static int SUCCESSFUL_RESPONSE = 0;
-    private RealmRepository repository;
+    private final RealmRepository repository;
 
     private static final Logger logger = LoggerFactory.getLogger(DraChannel.class);
 
-    DiameterLayer diameter = null;
+    private DiameterLayer diameter = null;
 
     public DraChannel(ChannelSettings channelSetting) {
         super(channelSetting);
@@ -68,7 +68,7 @@ public class DraChannel extends ChannelHandler {
     @Override
     public void receiveMessageRequest(ChannelMessage channelMessage) {
         // STEP 1: message to be received from reference point (map, cap, diameter, ...)
-        logger.info("Sending message '" + channelMessage.toString() + "' to application.");
+        logger.info("Sending message '{}' to application.", channelMessage);
         sendMessageRequest(channelMessage);
     }
 
@@ -87,15 +87,15 @@ public class DraChannel extends ChannelHandler {
                     }*/
                 } catch (InternalException | IllegalDiameterStateException | RouteException | OverloadException e) {
                     final int result = (e instanceof RouteException) ? NETWORK_ERROR : FAILED_RESPONSE;
-                    logger.warn(String.format("Caught exception '%s' while sending response for sessionId [%s], returning %s.",
-                            e.getMessage(), message.getSessionId(), result == NETWORK_ERROR ? "NETWORK_ERROR" : "FAILED_RESPONSE"), e);
+                    logger.warn("Caught exception while sending response for sessionId [{}], returning {}.",
+                            message.getSessionId(), result == NETWORK_ERROR ? "NETWORK_ERROR" : "FAILED_RESPONSE", e);
                     return result;
                 }
             }
-            logger.info(String.format("Message '%s' sent to diameter.", message.getSessionId()));
+            logger.info("Message '{}' sent to diameter.", message.getSessionId());
         } catch (Exception e) {
-            logger.error(String.format("Caught exception '%s' while sending response for transactionId [%s], returning FAILED_RESPONSE.",
-                    e.getMessage(), channelMessage.getTransactionId()));
+            logger.error("Caught exception while sending response for transactionId [{}], returning FAILED_RESPONSE.",
+                    channelMessage.getTransactionId(), e);
             return FAILED_RESPONSE;
         }
 
