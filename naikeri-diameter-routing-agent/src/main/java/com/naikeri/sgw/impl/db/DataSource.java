@@ -22,6 +22,8 @@ public class DataSource implements RealmRepository {
     private static final Logger logger = LoggerFactory.getLogger(DataSource.class);
 
 
+    private static final int VALIDATION_TIMEOUT_SECONDS = 2;
+
     private final Template template;
     private Connection connection;
     private static DataSource instance = null;
@@ -46,13 +48,45 @@ public class DataSource implements RealmRepository {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         mapper.findAndRegisterModules();
         this.template = mapper.readValue(new SgwResource("application.yaml").getAsStream(), Template.class);
+        this.connection = connect();
+    }
 
+    private Connection connect() throws SQLException {
         Properties properties = new Properties();
         properties.put("user", template.getUser());
         properties.put("password", template.getPassword());
+        return DriverManager.getConnection(template.getUrl(), properties);
+    }
 
-        connection = DriverManager.getConnection(template.getUrl(), properties);
+    /**
+     * The connection is opened once and kept, so a database restart or an idle timeout would otherwise leave
+     * this agent permanently disconnected for the rest of its run. Every statement goes through here, which
+     * validates the connection and reopens it when the server has gone away.
+     */
+    private synchronized Connection connection() throws SQLException {
+        try {
+            if (connection != null && connection.isValid(VALIDATION_TIMEOUT_SECONDS)) {
+                return connection;
+            }
+        }
+        catch (SQLException e) {
+            logger.debug("Connection validation failed, reconnecting", e);
+        }
+        closeQuietly(connection);
+        logger.info("Reconnecting to '{}'", template.getUrl());
+        connection = connect();
+        return connection;
+    }
 
+    private static void closeQuietly(Connection connection) {
+        if (connection != null) {
+            try {
+                connection.close();
+            }
+            catch (SQLException e) {
+                logger.debug("Failed to close the previous connection", e);
+            }
+        }
     }
 
     /**
@@ -64,25 +98,30 @@ public class DataSource implements RealmRepository {
         return DataSource.getInstance();
     }
 
+    /**
+     * Runs a query whose placeholders are JDBC '?' markers, binding params in order. Values reach here from
+     * peer messages (a realm name in a CER, for instance), so they are never formatted into the statement.
+     */
     public <T> List<T> findByQuery(Class<T> classEntity, String query, String... params) {
 
-        try {
+        try (PreparedStatement st = connection().prepareStatement(query)) {
             Field[] fields = classEntity.getDeclaredFields();
-            Statement st = connection.createStatement();
-            ResultSet rs = st.executeQuery(String.format(query, params));
+            for (int i = 0; i < params.length; i++) {
+                st.setString(i + 1, params[i]);
+            }
 
             List<T> result = new ArrayList<>();
-            while (rs.next()) {
-                T entity = classEntity.getDeclaredConstructor().newInstance();
-                setValues(entity, fields, rs);
-                result.add(entity);
+            try (ResultSet rs = st.executeQuery()) {
+                while (rs.next()) {
+                    T entity = classEntity.getDeclaredConstructor().newInstance();
+                    setValues(entity, fields, rs);
+                    result.add(entity);
+                }
             }
-            rs.close();
-            st.close();
 
             return result;
         } catch (Exception e) {
-            logger.warn("Exception caught", e);
+            logger.warn("Exception caught running query [{}]", query, e);
             return null;
         }
     }
@@ -132,7 +171,8 @@ public class DataSource implements RealmRepository {
             }
             String sql = "INSERT INTO " + persistence.name() + "(" + String.join(",", keys) + ") " +
                     "VALUES (?" + String.join(",?", keys.stream().map(f -> "").collect(Collectors.toList())) + ")";
-            PreparedStatement pStatement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
+            Connection conn = connection();
+            PreparedStatement pStatement = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
             for (int j = 0; j < vls.size(); j++) {
                 Object obj = vls.get(j);
                 if (obj instanceof Long) {
@@ -140,7 +180,7 @@ public class DataSource implements RealmRepository {
                 } else if (obj instanceof String) {
                     pStatement.setString(j + 1, obj.toString());
                 } else if (obj instanceof String[]) {
-                    pStatement.setArray(j + 1, connection.createArrayOf("varchar", (Object[]) obj));
+                    pStatement.setArray(j + 1, conn.createArrayOf("varchar", (Object[]) obj));
                 } else if (obj instanceof Boolean) {
                     pStatement.setBoolean(j + 1, (Boolean) obj);
                 } else if (obj instanceof Integer) {
@@ -166,23 +206,13 @@ public class DataSource implements RealmRepository {
         return null;
     }
 
-    public void executeUpdate(String query) {
-        try {
-            Statement st = connection.createStatement();
-            st.executeUpdate(query);
-            st.close();
-        } catch (Exception e) {
-            logger.warn("Exception caught", e);
-        }
-    }
-
     @Override
     public void saveRealm(Realm realm) {
 
         Long realmId = save(realm);
         Long applId = null;
         try {
-            PreparedStatement pStatement = connection.prepareStatement("SELECT appl_id FROM application_id WHERE vendor_id = ? and auth_appl_id = ? and acct_appl_id = ?;");
+            PreparedStatement pStatement = connection().prepareStatement("SELECT appl_id FROM application_id WHERE vendor_id = ? and auth_appl_id = ? and acct_appl_id = ?;");
             pStatement.setLong(1, realm.getApplicationId().getVendorId());
             pStatement.setLong(2, realm.getApplicationId().getAuthApplId());
             pStatement.setLong(3, realm.getApplicationId().getAcctApplId());
@@ -198,7 +228,22 @@ public class DataSource implements RealmRepository {
         if (applId == null) {
             applId = save(realm.getApplicationId());
         }
-        executeUpdate(String.format("INSERT INTO realm_application(realm_id, appl_id) VALUES (%s, %s)", realmId, applId));
+        linkRealmApplication(realmId, applId);
+    }
+
+    private void linkRealmApplication(Long realmId, Long applId) {
+        if (realmId == null || applId == null) {
+            logger.warn("Not linking realm '{}' to application '{}': one of them was not saved", realmId, applId);
+            return;
+        }
+        try (PreparedStatement pStatement =
+                     connection().prepareStatement("INSERT INTO realm_application(realm_id, appl_id) VALUES (?, ?)")) {
+            pStatement.setLong(1, realmId);
+            pStatement.setLong(2, applId);
+            pStatement.executeUpdate();
+        } catch (Exception e) {
+            logger.warn("Exception caught linking realm '{}' to application '{}'", realmId, applId, e);
+        }
     }
 
     @Override
