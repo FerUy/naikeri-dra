@@ -42,8 +42,15 @@
         </copy>
 
         <copy failonerror="true" todir="${release.dir}/conf">
-            <fileset file="${base.dir}/../naikeri-diameter-routing-agent/src/main/resources/*.xml"/>
-            <fileset file="${base.dir}/../naikeri-diameter-routing-agent/src/main/resources/*.yaml"/>
+            <fileset file="${base.dir}/../naikeri-diameter-routing-agent/src/main/config/*.xml"/>
+            <fileset file="${base.dir}/../naikeri-diameter-routing-agent/src/main/config/*.yaml"/>
+            <fileset file="${base.dir}/../naikeri-diameter-routing-agent/src/main/config/*.sql"/>
+        </copy>
+
+        <!-- dictionary.xml comes from the jDiameter mux jar, unpacked by the Maven build, so the deployed
+             file is always the stack's own. It stays editable in conf/ for per-deployment changes. -->
+        <copy failonerror="true" todir="${release.dir}/conf">
+            <fileset file="${base.dir}/../naikeri-diameter-routing-agent/target/dictionary/dictionary.xml"/>
         </copy>
 
         <copy failonerror="true" todir="${release.dir}/bin">

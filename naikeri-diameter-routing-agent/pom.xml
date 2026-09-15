@@ -29,6 +29,26 @@
                             <useBaseVersion>false</useBaseVersion>
                         </configuration>
                     </execution>
+                    <execution>
+                        <!-- The dictionary is maintained in jDiameter and shipped inside the mux jar.
+                             Unpacking it keeps the file in conf/ identical to the stack's own, instead of a
+                             copy in this repository that drifts; operators can still edit conf/.
+                             unpack-dependencies resolves it from the dependency graph, so the version is
+                             whatever the Signaling Gateway brings in and is never pinned here. -->
+                        <id>unpack-dictionary</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>unpack-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <includeGroupIds>org.mobicents.diameter</includeGroupIds>
+                            <includeArtifactIds>restcomm-diameter-mux-jar</includeArtifactIds>
+                            <includes>dictionary.xml</includes>
+                            <outputDirectory>${project.build.directory}/dictionary</outputDirectory>
+                            <overWriteReleases>true</overWriteReleases>
+                            <failOnMissingClassifierArtifact>true</failOnMissingClassifierArtifact>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
             <plugin>
