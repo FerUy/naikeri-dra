@@ -21,7 +21,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class DraChannel extends ChannelHandler {
 
@@ -43,13 +42,22 @@ public class DraChannel extends ChannelHandler {
     public void channelInitialize(LayerInterface[] layerInterfaces) {
         diameter = (DiameterLayer) layerInterfaces[0];
         RequestHandler.initialize(diameter);
+        if (repository == null) {
+            // DataSource has already reported why; the realms configured in diameter-server.xml still apply.
+            logger.info("No realm repository, so no stored realms are loaded");
+            return;
+        }
         try {
             List<Realm> realms = repository.findAll();
-
+            if (realms == null || realms.isEmpty()) {
+                logger.info("No stored realms to load");
+                return;
+            }
             diameter.addRealms(realms.stream()
                     .map(realm -> new RealmImpl(realm.getName(), realm.getDiameterApplicationId(), realm.getLocalAction(),
                             null, null, realm.getDynamic(), realm.getExpTime(), realm.getPeers()))
-                    .collect(Collectors.toList()).toArray(new IRealm[]{}));
+                    .toArray(IRealm[]::new));
+            logger.info("Loaded '{}' realms from the repository", realms.size());
         } catch (Exception e) {
             logger.error("Error loading realms", e);
         }
@@ -104,7 +112,10 @@ public class DraChannel extends ChannelHandler {
 
     @Override
     public void onReceiveUnknownRealm(IRealm unknownRealm) {
-
+        if (repository == null) {
+            logger.debug("Realm '{}' not persisted: no realm repository", unknownRealm.getName());
+            return;
+        }
         try {
             Realm realm = new Realm();
             realm.setName(unknownRealm.getName());

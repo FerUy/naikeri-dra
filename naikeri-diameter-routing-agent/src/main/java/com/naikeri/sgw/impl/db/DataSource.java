@@ -22,26 +22,30 @@ public class DataSource implements RealmRepository {
     private static final Logger logger = LoggerFactory.getLogger(DataSource.class);
 
 
-    private ObjectMapper mapper;
-    private Template template;
+    private final Template template;
     private Connection connection;
     private static DataSource instance = null;
 
-    private static DataSource getInstance() {
-        if (instance == null) {
+    private static boolean initialized = false;
+
+    private static synchronized DataSource getInstance() {
+        if (!initialized) {
+            initialized = true;
             try {
                 instance = new DataSource();
+                logger.info("DataSource connected to '{}'", instance.template.getUrl());
             } catch (Exception e) {
-                logger.warn("Exception caught", e);
+                logger.warn("No database available, so realms are taken from the configuration file only "
+                        + "and newly seen realms are not persisted", e);
             }
         }
         return instance;
     }
 
     public DataSource() throws Exception {
-        mapper = new ObjectMapper(new YAMLFactory());
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         mapper.findAndRegisterModules();
-        template = mapper.readValue(new SgwResource("application.yaml").getAsStream(), Template.class);
+        this.template = mapper.readValue(new SgwResource("application.yaml").getAsStream(), Template.class);
 
         Properties properties = new Properties();
         properties.put("user", template.getUser());
@@ -51,10 +55,13 @@ public class DataSource implements RealmRepository {
 
     }
 
+    /**
+     * Returns the repository, or null when no database is reachable: the agent runs without one, routing from
+     * naikeri-signaling-gateway.xml alone, so every caller must handle null rather than assume a repository.
+     */
     public static DataSource initialize() {
-        DataSource.getInstance();
         logger.info("DataSource is initializing...");
-        return instance;
+        return DataSource.getInstance();
     }
 
     public <T> List<T> findByQuery(Class<T> classEntity, String query, String... params) {
