@@ -26,6 +26,16 @@ public class DraApplication extends Application {
 
     private static final Logger logger = LoggerFactory.getLogger(DraApplication.class);
 
+    /**
+     * Carries the address of the host this agent routed to, added to the answer when the rule's host is not
+     * replacing Destination-Host. RFC 6733 section 11.1.1 reserves 16777214 and 16777215 for experimental
+     * use, so no future allocation can collide with it; code 999, used before, sits in the IETF-managed
+     * range and could be assigned to something else. Move this to a vendor-specific code once Naikeri has
+     * an SMI Private Enterprise Number. The AVP is added with the M bit clear, so a peer that does not know
+     * it ignores it rather than rejecting the answer.
+     */
+    private static final int NAIKERI_ROUTED_HOST = 16777214;
+
 
     public DraApplication(ApplicationSettings applicationSettings) {
         super(applicationSettings);
@@ -102,7 +112,7 @@ public class DraApplication extends Application {
                             answer.getAvps().removeAvp(Avp.DESTINATION_HOST);
                             answer.getAvps().addAvp(Avp.DESTINATION_HOST, host.getAddress().getBytes());
                         } else {
-                            answer.getAvps().addAvp(999, host.getAddress().getBytes());
+                            answer.getAvps().addAvp(NAIKERI_ROUTED_HOST, host.getAddress().getBytes());
                         }
                     }
                     if (host.getOriginHost() != null && !"".equals(host.getOriginHost().trim())) {

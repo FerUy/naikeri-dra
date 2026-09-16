@@ -17,7 +17,7 @@
 
     <properties>
         <naikeri.artifactory.url>https://ec2-56-126-119-82.sa-east-1.compute.amazonaws.com/artifactory/libs-release-local</naikeri.artifactory.url>
-        <naikeri-signaling-gateway-core.version>2.2.0-104</naikeri-signaling-gateway-core.version>
+        <naikeri-signaling-gateway-core.version>2.2.0-105</naikeri-signaling-gateway-core.version>
         <compiler.plugin.version>3.14.1</compiler.plugin.version>
         <jar.plugin.version>3.1.2</jar.plugin.version>
         <compile.source>11</compile.source>
