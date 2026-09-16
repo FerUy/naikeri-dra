@@ -88,10 +88,15 @@ public class RequestHandler { // extends Thread {
         }
     }
 
+    /**
+     * Takes the pending request out of the cache. Each request is looked up once, when its answer arrives, so
+     * removing it here lets the cache follow the transactions in flight; the aging sweep is then left to catch
+     * only requests that never received an answer. A duplicate answer therefore finds nothing and is dropped.
+     */
     public static Request getRequest(String sessionId, long endToEndIdentifier) {
         Request request = null;
         String key = getKey(sessionId, endToEndIdentifier);
-        Map<String, Object> entry = requests.get(key);
+        Map<String, Object> entry = requests.remove(key);
         if (entry != null) {
             request = (Request) entry.get("request");
             if (request == null) {

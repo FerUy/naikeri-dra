@@ -41,6 +41,9 @@ public class DraApplication extends Application {
             Request dma = (Request) channelMessage.getParameter("REQUEST");
             channelMessage.setParameter("REQUEST", RequestHandler.getRequest(dma.getSessionId(), dma.getEndToEndIdentifier()));
             processAnswerMessage(channelMessage);
+        } else {
+            logger.warn("Discarding message with transactionId '{}': unexpected originId '{}', expected DMR or DMA",
+                    channelMessage.getTransactionId(), originId);
         }
     }
 
@@ -196,18 +199,22 @@ public class DraApplication extends Application {
         String destinationRealm = avps.getAvp(Avp.DESTINATION_REALM).getUTF8String();
         Avp avpDestHost = avps.getAvp(Avp.DESTINATION_HOST);
         String destinationHost = avpDestHost != null ? avpDestHost.getUTF8String() : null;
-        final String[] imsi = {""};
+        // Which AVP carries the IMSI depends on the rule, but the message does not: extract both once here
+        // rather than parsing the AVP set again for every rule.
+        final String imsiFromImsiAvp = getImsiFromImsiAvp(avps);
+        final String imsiFromSubscriptionId = getImsiFromSubscriptionId(avps);
 
         Optional<Rule> ruleOptional = GettingRules
                 .rules().list().stream().filter(rule -> {
-                    boolean match = (rule.match().imsi().matcher((imsi[0] = getImsi(rule, avps))).matches() && rule.isEnabled()
+                    String imsi = rule.match().isSubscriptionId() ? imsiFromSubscriptionId : imsiFromImsiAvp;
+                    boolean match = (rule.isEnabled() && rule.match().imsi().matcher(imsi).matches()
                             && rule.match().originHost().matcher(originHost).matches() && rule.match().originRealm().matcher(originRealm).matches()
                             && rule.match().destinationRealm().matcher(destinationRealm).matches()
                             && (destinationHost == null || rule.match().destinationHost().matcher(destinationHost).matches()));
                     if (match)
                         logger.debug("Match in rule [{}] with the following data: imsi[{}] match imsi[{}] " +
                                         "originHost[{}] match host[{}] originRealm[{}] match realm[{}]",
-                                rule.getName(), imsi[0], rule.match().imsi(), originHost, rule.match().originHost().pattern(),
+                                rule.getName(), imsi, rule.match().imsi(), originHost, rule.match().originHost().pattern(),
                                 originRealm, rule.match().originRealm().pattern());
                     return match;
                 })
@@ -219,7 +226,8 @@ public class DraApplication extends Application {
             Rule defaultRule = getDefaultRule();
             if (defaultRule != null) return defaultRule;
         }
-        logger.info("No matching rule for imsi '{}', originHost '{}' originRealm '{}'", imsi[0], originHost, originRealm);
+        logger.info("No matching rule for imsi '{}' (Subscription-Id '{}'), originHost '{}' originRealm '{}'",
+                imsiFromImsiAvp, imsiFromSubscriptionId, originHost, originRealm);
         return null;
     }
 
@@ -232,34 +240,44 @@ public class DraApplication extends Application {
     }
 
     private String getImsi(Rule rule, AvpSet avps) {
-        Avp imsi = null;
+        return rule.match().isSubscriptionId() ? getImsiFromSubscriptionId(avps) : getImsiFromImsiAvp(avps);
+    }
+
+    private String getImsiFromImsiAvp(AvpSet avps) {
         try {
-            if (!rule.match().isSubscriptionId()) {
-                imsi = avps.getAvp(Avp.TGPP_IMSI);
-                if (imsi == null) {
-                    logger.debug("No IMSI found in [Avp.TGPP_IMSI], rule name=[{}]", rule.getName());
-                    return "";
-                }
-            } else {
-                if (avps.getAvps(Avp.SUBSCRIPTION_ID) != null) {
-                    for (Avp avp : avps.getAvps(Avp.SUBSCRIPTION_ID).asArray()) {
-                        AvpSet grouped = avp.getGrouped();
-                        if (grouped.getAvp(Avp.SUBSCRIPTION_ID_TYPE).getInteger32() == 1) {
-                            imsi = grouped.getAvp(Avp.SUBSCRIPTION_ID_DATA);
-                            break;
-                        }
-                    }
-                }
-                if (imsi == null) {
-                    logger.debug("No IMSI found in [Avp.SUBSCRIPTION_ID_DATA], rule name=[{}]", rule.getName());
-                    return "";
-                }
+            Avp imsi = avps.getAvp(Avp.TGPP_IMSI);
+            if (imsi == null) {
+                logger.debug("No IMSI found in [Avp.TGPP_IMSI]");
+                return "";
             }
             return imsi.getUTF8String();
         } catch (Exception e) {
-            logger.error("Exception caught while get Imsi in the {} rule", rule.getName(), e);
+            logger.error("Exception caught while reading the IMSI from [Avp.TGPP_IMSI]", e);
+            return "";
         }
-        return "";
+    }
+
+    private String getImsiFromSubscriptionId(AvpSet avps) {
+        try {
+            Avp imsi = null;
+            if (avps.getAvps(Avp.SUBSCRIPTION_ID) != null) {
+                for (Avp avp : avps.getAvps(Avp.SUBSCRIPTION_ID).asArray()) {
+                    AvpSet grouped = avp.getGrouped();
+                    if (grouped.getAvp(Avp.SUBSCRIPTION_ID_TYPE).getInteger32() == 1) {
+                        imsi = grouped.getAvp(Avp.SUBSCRIPTION_ID_DATA);
+                        break;
+                    }
+                }
+            }
+            if (imsi == null) {
+                logger.debug("No IMSI found in [Avp.SUBSCRIPTION_ID_DATA]");
+                return "";
+            }
+            return imsi.getUTF8String();
+        } catch (Exception e) {
+            logger.error("Exception caught while reading the IMSI from [Avp.SUBSCRIPTION_ID_DATA]", e);
+            return "";
+        }
     }
 
     public Host getRoutingHost(Rule rule, List<String> previousHost) {
