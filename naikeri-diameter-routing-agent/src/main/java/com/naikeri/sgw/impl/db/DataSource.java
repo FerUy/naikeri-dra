@@ -129,25 +129,29 @@ public class DataSource implements RealmRepository {
     private void setValues(Object entity, Field[] fields, ResultSet rs) throws Exception {
         for (Field field : fields) {
             field.setAccessible(true);
-            if (field.isAnnotationPresent(Column.class) && field.getType().getPackage().getName().equals("java.lang")) {
+            try {
+                if (field.isAnnotationPresent(Column.class) && field.getType().getPackage().getName().equals("java.lang")) {
 
-                field.set(entity, rs.getObject(field.getAnnotation(Column.class).name()));
-            } else if (field.getType().isArray() || field.getType().getPackage().getName().equals("java.lang")) {
-                Object value = rs.getObject(field.getName());
-                if (value instanceof org.postgresql.jdbc.PgArray) {
-                    //TODO: add other type of array
-                    field.set(entity, ((org.postgresql.jdbc.PgArray) value).getArray());
-                } else {
-                    field.set(entity, rs.getObject(field.getName()));
+                    field.set(entity, rs.getObject(field.getAnnotation(Column.class).name()));
+                } else if (field.getType().isArray() || field.getType().getPackage().getName().equals("java.lang")) {
+                    Object value = rs.getObject(field.getName());
+                    if (value instanceof org.postgresql.jdbc.PgArray) {
+                        //TODO: add other type of array
+                        field.set(entity, ((org.postgresql.jdbc.PgArray) value).getArray());
+                    } else {
+                        field.set(entity, rs.getObject(field.getName()));
+                    }
+                } else if (!field.getType().getClass().equals(List.class)) {
+                    Object subEntity = field.getType().getDeclaredConstructor().newInstance();
+                    Field[] subFields = subEntity.getClass().getDeclaredFields();
+                    setValues(subEntity, subFields, rs);
+                    field.set(entity, subEntity);
                 }
-            } else if (!field.getType().getClass().equals(List.class)) {
-                Object subEntity = field.getType().getDeclaredConstructor().newInstance();
-                Field[] subFields = subEntity.getClass().getDeclaredFields();
-                setValues(subEntity, subFields, rs);
-                field.set(entity, subEntity);
             }
-
-            field.setAccessible(false);
+            finally {
+                // without this, a row that fails to map leaves the field accessible for the rest of the run
+                field.setAccessible(false);
+            }
         }
     }
 
@@ -160,46 +164,50 @@ public class DataSource implements RealmRepository {
             for (int i = 0; i < fields.length; i++) {
                 Field field = fields[i];
                 field.setAccessible(true);
-                if (field.isAnnotationPresent(Column.class) && field.get(t) != null) {
-                    keys.add(field.getAnnotation(Column.class).name());
-                    vls.add(field.get(t));
-                } else if ((field.getType().isArray() || field.getType().getPackage().getName().equals("java.lang")) && field.get(t) != null) {
-                    keys.add(field.getName());
-                    vls.add(field.get(t));
+                try {
+                    if (field.isAnnotationPresent(Column.class) && field.get(t) != null) {
+                        keys.add(field.getAnnotation(Column.class).name());
+                        vls.add(field.get(t));
+                    } else if ((field.getType().isArray() || field.getType().getPackage().getName().equals("java.lang")) && field.get(t) != null) {
+                        keys.add(field.getName());
+                        vls.add(field.get(t));
+                    }
                 }
-                field.setAccessible(false);
+                finally {
+                    field.setAccessible(false);
+                }
             }
             String sql = "INSERT INTO " + persistence.name() + "(" + String.join(",", keys) + ") " +
                     "VALUES (?" + String.join(",?", keys.stream().map(f -> "").collect(Collectors.toList())) + ")";
             Connection conn = connection();
-            PreparedStatement pStatement = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
-            for (int j = 0; j < vls.size(); j++) {
-                Object obj = vls.get(j);
-                if (obj instanceof Long) {
-                    pStatement.setLong(j + 1, (Long) obj);
-                } else if (obj instanceof String) {
-                    pStatement.setString(j + 1, obj.toString());
-                } else if (obj instanceof String[]) {
-                    pStatement.setArray(j + 1, conn.createArrayOf("varchar", (Object[]) obj));
-                } else if (obj instanceof Boolean) {
-                    pStatement.setBoolean(j + 1, (Boolean) obj);
-                } else if (obj instanceof Integer) {
-                    pStatement.setInt(j + 1, (int) obj);
-                } else if (obj instanceof Double) {
-                    pStatement.setDouble(j + 1, (Double) obj);
-                } else if (obj instanceof Float) {
-                    pStatement.setFloat(j + 1, (Float) obj);
+            try (PreparedStatement pStatement = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
+                for (int j = 0; j < vls.size(); j++) {
+                    Object obj = vls.get(j);
+                    if (obj instanceof Long) {
+                        pStatement.setLong(j + 1, (Long) obj);
+                    } else if (obj instanceof String) {
+                        pStatement.setString(j + 1, obj.toString());
+                    } else if (obj instanceof String[]) {
+                        pStatement.setArray(j + 1, conn.createArrayOf("varchar", (Object[]) obj));
+                    } else if (obj instanceof Boolean) {
+                        pStatement.setBoolean(j + 1, (Boolean) obj);
+                    } else if (obj instanceof Integer) {
+                        pStatement.setInt(j + 1, (int) obj);
+                    } else if (obj instanceof Double) {
+                        pStatement.setDouble(j + 1, (Double) obj);
+                    } else if (obj instanceof Float) {
+                        pStatement.setFloat(j + 1, (Float) obj);
+                    }
                 }
-            }
 
-            if (pStatement.executeUpdate() > 0) {
-                ResultSet resultSet = pStatement.getGeneratedKeys();
-                if (resultSet.next()) {
-                    return resultSet.getLong(1);
+                if (pStatement.executeUpdate() > 0) {
+                    try (ResultSet resultSet = pStatement.getGeneratedKeys()) {
+                        if (resultSet.next()) {
+                            return resultSet.getLong(1);
+                        }
+                    }
                 }
-                resultSet.close();
             }
-            pStatement.close();
         } catch (Exception e) {
             logger.warn("Exception caught", e);
         }
