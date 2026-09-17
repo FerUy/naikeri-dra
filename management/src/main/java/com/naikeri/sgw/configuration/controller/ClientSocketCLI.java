@@ -12,19 +12,16 @@ public class ClientSocketCLI {
     private static BufferedReader in;
     private static Socket clientSocket;
 
-    private static ClientSocketCLI instance = null;
+    // Must match ServerSocketCLI.CLI_PORT in the routing agent
+    private static final int CLI_PORT = 5556;
 
-    private static void getInstance() {
-        if (instance == null) {
-            instance = new ClientSocketCLI();
-        }
+    private ClientSocketCLI() {
     }
 
     public static int initialize() {
         int response = 1;
-        ClientSocketCLI.getInstance();
         try {
-            clientSocket = new Socket("127.0.0.1", 5556);
+            clientSocket = new Socket("127.0.0.1", CLI_PORT);
             out = new PrintWriter(clientSocket.getOutputStream(), true);
             in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
         } catch (Exception ex) {

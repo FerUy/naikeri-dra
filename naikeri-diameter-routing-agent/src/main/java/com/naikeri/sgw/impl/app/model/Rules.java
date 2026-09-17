@@ -18,9 +18,7 @@ public class Rules {
     }
 
     public boolean dropPolicyEnabled(String dropPolicy) {
-        if (this.dropPolicy != null && this.dropPolicy.contains(dropPolicy))
-            return true;
-        return false;
+        return this.dropPolicy != null && this.dropPolicy.contains(dropPolicy);
     }
 
     @XmlAttribute(name = "drop-policy")

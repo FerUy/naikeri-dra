@@ -33,7 +33,7 @@ public class RoundRobinTest {
                 Host host = rule.getHostByLoadBalance();
                 host.incrementSentMessages();
                 if (result.containsKey(host.getName())) {
-                    result.put(host.getName(), result.get(host.getName())+1l);
+                    result.put(host.getName(), result.get(host.getName())+1L);
                     resultArr.put(host.getName(), resultArr.get(host.getName())+", "+host.getSentMessages());
                 } else {
                     result.put(host.getName(), host.getSentMessages());
@@ -42,7 +42,7 @@ public class RoundRobinTest {
             }
 
             for (Map.Entry<String, Long> kv : result.entrySet()) {
-                System.out.println(String.format("host: %s, count: %s, arr: [%s]",  kv.getKey(), kv.getValue(), resultArr.get(kv.getKey())));
+                System.out.printf("host: %s, count: %s, arr: [%s]%n",  kv.getKey(), kv.getValue(), resultArr.get(kv.getKey()));
             }
         } else {
            // AssertJUnit.assertTrue("Not Rule", false);

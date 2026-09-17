@@ -102,12 +102,12 @@ public class DraApplication extends Application {
                         channelMessage.setParameter("ROUTE_RECORD", true);
 
                     // Realm Replacement; Host Replacement
-                    if (host.getRealm() != null && !"".equals(host.getRealm().trim())) {
+                    if (host.getRealm() != null && !host.getRealm().trim().isEmpty()) {
                         answer.getAvps().removeAvp(Avp.DESTINATION_REALM);
                         answer.getAvps().addAvp(Avp.DESTINATION_REALM, host.getRealm().getBytes());
                     }
 
-                    if (host.getAddress() != null && !"".equals(host.getAddress().trim())) {
+                    if (host.getAddress() != null && !host.getAddress().trim().isEmpty()) {
                         if (host.isReplaceHost()) {
                             answer.getAvps().removeAvp(Avp.DESTINATION_HOST);
                             answer.getAvps().addAvp(Avp.DESTINATION_HOST, host.getAddress().getBytes());
@@ -115,19 +115,19 @@ public class DraApplication extends Application {
                             answer.getAvps().addAvp(NAIKERI_ROUTED_HOST, host.getAddress().getBytes());
                         }
                     }
-                    if (host.getOriginHost() != null && !"".equals(host.getOriginHost().trim())) {
+                    if (host.getOriginHost() != null && !host.getOriginHost().trim().isEmpty()) {
                         answer.getAvps().removeAvp(Avp.ORIGIN_HOST);
                         answer.getAvps().addAvp(Avp.ORIGIN_HOST, host.getOriginHost().getBytes());
                     }
-                    if (host.getOriginRealm() != null && !"".equals(host.getOriginRealm().trim())) {
+                    if (host.getOriginRealm() != null && !host.getOriginRealm().trim().isEmpty()) {
                         answer.getAvps().removeAvp(Avp.ORIGIN_REALM);
                         answer.getAvps().addAvp(Avp.ORIGIN_REALM, host.getOriginRealm().getBytes());
                     }
-                    if (host.getDestinationHost() != null && !"".equals(host.getDestinationHost().trim())) {
+                    if (host.getDestinationHost() != null && !host.getDestinationHost().trim().isEmpty()) {
                         answer.getAvps().removeAvp(Avp.DESTINATION_HOST);
                         answer.getAvps().addAvp(Avp.DESTINATION_HOST, host.getDestinationHost().getBytes());
                     }
-                    if (host.getDestinationRealm() != null && !"".equals(host.getDestinationRealm().trim())) {
+                    if (host.getDestinationRealm() != null && !host.getDestinationRealm().trim().isEmpty()) {
                         answer.getAvps().removeAvp(Avp.DESTINATION_REALM);
                         answer.getAvps().addAvp(Avp.DESTINATION_REALM, host.getDestinationRealm().getBytes());
                     }

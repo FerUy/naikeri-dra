@@ -12,8 +12,8 @@ import static java.nio.file.StandardWatchEventKinds.*;
 
 
 public abstract class FileWatcher {
-    private Path folderPath;
-    private String watchFile;
+    private final Path folderPath;
+    private final String watchFile;
 
     public FileWatcher(String watchFile)
     {
@@ -21,8 +21,7 @@ public abstract class FileWatcher {
 
         boolean isRegularFile = Files.isRegularFile(filePath);
 
-        if (!isRegularFile)
-        {
+        if (!isRegularFile) {
             // Do not allow this to be a folder since we want to watch files
             throw new IllegalArgumentException(watchFile + " is not a regular file");
         }

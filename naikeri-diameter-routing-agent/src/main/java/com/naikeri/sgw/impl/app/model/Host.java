@@ -64,7 +64,7 @@ public class Host {
     @XmlAttribute(name = "dest-realm")
     private String destinationRealm;
 
-    private Long sentMessages = 0l;
+    private Long sentMessages = 0L;
 
     public Host() {
     }
@@ -126,7 +126,7 @@ public class Host {
     }
 
     public void resetSentMessages(){
-        this.sentMessages = 0l;
+        this.sentMessages = 0L;
     }
 
     public Boolean isReplaceHost() {

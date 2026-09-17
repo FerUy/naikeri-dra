@@ -20,6 +20,7 @@ import java.util.List;
 public class ServerSocketCLI extends Thread {
 
     private static final Logger logger = LoggerFactory.getLogger(ServerSocketCLI.class);
+    private static final int CLI_PORT = 5556;
 
     private static ServerSocketCLI instance = null;
     private static DiameterLayer diameterLayer = null;
@@ -42,15 +43,13 @@ public class ServerSocketCLI extends Thread {
 
     @Override
     public void run() {
-        try {
-            logger.info("Starting Server Socket");
-            ServerSocket serverSocket = new ServerSocket(5556);
-            while (true) {
+        logger.info("Starting Server Socket");
+        try (ServerSocket serverSocket = new ServerSocket(CLI_PORT)) {
+            while (!serverSocket.isClosed()) {
                 new ClientHandler(serverSocket.accept()).start();
             }
-
         } catch (Exception e) {
-            logger.error("Error on start server socket " + e.getMessage());
+            logger.error("Error on start server socket", e);
         }
     }
 
@@ -73,7 +72,7 @@ public class ServerSocketCLI extends Thread {
                 while ((inputLine = in.readLine()) != null) {
                     byte[] decodedBytes = Base64.getDecoder().decode(inputLine);
                     String decodedMsg = new String(decodedBytes);
-                    logger.info("Getting this in socket server " + decodedMsg);
+                    logger.info("Getting this in socket server {}", decodedMsg);
                     String[] dataSocket = decodedMsg.split("#");
                     if ("peer".equals(dataSocket[0])) {
                         if (dataSocket.length > 2) {
@@ -115,7 +114,7 @@ public class ServerSocketCLI extends Thread {
                 out.close();
                 clientSocket.close();
             } catch (IOException e) {
-                logger.error("Error on server socket " + e.getMessage());
+                logger.error("Error on server socket", e);
             }
 
         }

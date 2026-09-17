@@ -93,20 +93,20 @@ public class Rule {
      */
     public Stream<Host> filterHost(int type) {
         Map<Integer, Long> data = hosts.stream().collect(Collectors.groupingBy(Host::getPriority, Collectors.counting()));
-        if (data != null && !data.isEmpty()) {
+        if (!data.isEmpty()) {
             Map<Integer, Long> arr = data.entrySet().stream()
                     .filter(f -> (type == 1 ? (f.getValue() == type) : f.getValue() >= type))
-                    .collect(Collectors.toMap(entry -> entry.getKey(),
-                            entry -> entry.getValue()));
+                    .collect(Collectors.toMap(Map.Entry::getKey,
+                        Map.Entry::getValue));
 
-            Stream<Host> result = hosts.stream().filter(f -> arr.keySet().contains(f.getPriority()));
+            Stream<Host> result = hosts.stream().filter(f -> arr.containsKey(f.getPriority()));
             if (type == 1) return result;
             else {
-                Long sum = arr.values().stream().mapToLong(value -> value.longValue()).sum();
+                long sum = arr.values().stream().mapToLong(Long::longValue).sum();
                 return result
                         .peek(host -> {
                             if (host.getLoadBalance() == null || host.getLoadBalance() == 0)
-                                host.setLoadBalance(Math.round(100 / sum));
+                                host.setLoadBalance((int) (100 / sum));
                         });
             }
         }
@@ -124,8 +124,7 @@ public class Rule {
         Optional<Host> optionalHost = collection.stream().filter(
                 f -> !previousHost.contains(f.getName()) && (f.getLoadBalance() == null || f.getLoadBalance() <= 0))
                 .max(Comparator.comparingInt(Host::getPriority));
-        Host result = optionalHost.isPresent() ? optionalHost.get() : null;
-        return result;
+        return optionalHost.orElse(null);
     }
 
     public Host getHostByLoadBalance() {
@@ -134,19 +133,16 @@ public class Rule {
             hostStream = hosts.stream();
         }
         List<Host> data = hostStream.collect(Collectors.toList());
-        if (data == null || data.isEmpty()) return null;
+        if (data.isEmpty()) return null;
 
-        Optional<Host> optionalHost = data.stream().filter(f -> f.getLoadBalance() != null && f.getLoadBalance() > 0
-                && ((f.getLoadBalance().doubleValue() / (average > 1 ? 100 : 1)) * average) > f.getSentMessages())
+        Optional<Host> optionalHost = data.stream().filter(f -> f.getLoadBalance() != null && f.getLoadBalance() > 0 && f.getLoadBalance().doubleValue() / 100 * average > f.getSentMessages())
                 .sorted(Comparator.comparingInt(Host::getLoadBalance).reversed())
                 .min(Comparator.comparingLong(Host::getSentMessages));
 
-        Host result = optionalHost.isPresent() ? optionalHost.get() : null;
+        Host result = optionalHost.orElse(null);
         if (result == null) {
             hosts.stream().filter(f -> f.getLoadBalance() != null && f.getLoadBalance() > 0)
-                    .collect(Collectors.toList()).forEach(h -> {
-                h.resetSentMessages();
-            });
+                    .collect(Collectors.toList()).forEach(Host::resetSentMessages);
             return getHostByLoadBalance();
         }
         return result;

@@ -28,7 +28,7 @@ import java.util.concurrent.Callable;
 
 public class Peer implements Callable<String> {
 
-    private ConfigurationController controller = new ConfigurationController();
+    private final ConfigurationController controller = new ConfigurationController();
 
     @CommandLine.Option(names = {"-list"}, description = "       Returns connection list")
     private boolean list;

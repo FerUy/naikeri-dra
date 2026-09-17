@@ -22,8 +22,7 @@ public class SignalingGatewayRules {
     }
 
     public List<Application> getApplications() {
-        List<Application> filterApplications = applications.stream().filter(f -> f.isEnabled()).collect(Collectors.toList());
-        return filterApplications;
+        return applications.stream().filter(Application::isEnabled).collect(Collectors.toList());
     }
 
     public void setApplications(List<Application> applications) {
