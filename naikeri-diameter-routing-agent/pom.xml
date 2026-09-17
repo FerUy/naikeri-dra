@@ -42,7 +42,7 @@
                         </goals>
                         <configuration>
                             <includeGroupIds>org.mobicents.diameter</includeGroupIds>
-                            <includeArtifactIds>restcomm-diameter-mux-jar</includeArtifactIds>
+                            <includeArtifactIds>restcomm-diameter-dictionary</includeArtifactIds>
                             <includes>dictionary.xml</includes>
                             <outputDirectory>${project.build.directory}/dictionary</outputDirectory>
                             <overWriteReleases>true</overWriteReleases>
