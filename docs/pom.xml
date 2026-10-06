@@ -10,16 +10,17 @@
 	<packaging>pom</packaging>
 
 	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<docs.this.platform>Naikeri</docs.this.platform>
 		<docs.this.folder>naikeri</docs.this.folder>
 		<docs.this.application>DRA</docs.this.application>
 		<docs.project.version>${project.version}</docs.project.version>
 		<docs.jee.platform>standalone JVM</docs.jee.platform>
 		<docs.slee.binary.url>${docs.this.release.binary.url}</docs.slee.binary.url>
-		<docs.this.issue.tracker.url>https://bitbucket.org/naikeri/naikeri-dra/jira?statuses=new</docs.this.issue.tracker.url>
-		<docs.this.release.source.code.url>https://bitbucket.org/naikeri/naikeri-dra/src/master/</docs.this.release.source.code.url>
-		<docs.this.trunk.source.code.url>https://bitbucket.org/naikeri/naikeri-dra/src/master/</docs.this.trunk.source.code.url>
-		<docs.this.release.binary.url>https://bitbucket.org/naikeri/naikeri-dra/downloads</docs.this.release.binary.url>
+		<docs.this.issue.tracker.url>https://github.com/FerUy/naikeri-dra/issues</docs.this.issue.tracker.url>
+		<docs.this.release.source.code.url>https://github.com/FerUy/naikeri-dra</docs.this.release.source.code.url>
+		<docs.this.trunk.source.code.url>https://github.com/FerUy/naikeri-dra/tree/master</docs.this.trunk.source.code.url>
+		<docs.this.release.binary.url>https://github.com/FerUy/naikeri-dra/releases</docs.this.release.binary.url>
 	</properties>
 
 	<modules>

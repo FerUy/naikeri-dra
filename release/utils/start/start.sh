@@ -1,6 +1,6 @@
 #!/bin/bash
 trap 'kill -TERM $PID' TERM INT
-cd /opt/naikeri/dra/Naikeri-DRA-VERSION/bin/
+cd "$(dirname "$0")" || exit 1
 #rm -rf *.xml
 
 # Console output goes to the terminal and to a file. Anything logged before log4j2.xml is read, and any

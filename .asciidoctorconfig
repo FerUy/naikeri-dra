@@ -1,0 +1,10 @@
+// Editor preview only: IntelliJ prepends this to every AsciiDoc file below this directory.
+// The Maven build ignores it and takes these values from docs/pom.xml, so keep the two in step.
+:this-platform: Naikeri
+:this-application: DRA
+:this-folder: naikeri
+:project-version: 2.2.0
+:this-issue-tracker-url: https://github.com/FerUy/naikeri-dra/issues
+:this-release-source-code-url: https://github.com/FerUy/naikeri-dra
+:this-trunk-source-code-url: https://github.com/FerUy/naikeri-dra/tree/master
+:this-release-binary-url: https://github.com/FerUy/naikeri-dra/releases

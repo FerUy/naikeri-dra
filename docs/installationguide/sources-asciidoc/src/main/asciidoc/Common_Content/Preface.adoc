@@ -5,11 +5,11 @@
 = Preface
 
 :leveloffset: 1
-include::Section-Conventions.adoc[]
+include::{docdir}/Common_Content/Section-Conventions.adoc[]
 :leveloffset: 0
 
 :leveloffset: 1
-include::Section-Feedback.adoc[]
+include::{docdir}/Common_Content/Section-Feedback.adoc[]
 :leveloffset: 0
 
 :sectnums:
