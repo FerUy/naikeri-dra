@@ -1,5 +1,5 @@
 [[_setup_uninstalling]]
 = Uninstalling
 
-If you wish to remove {this-platform} {this-application} you can do so just by deleting the installation directory.
- 
+Stop {this-platform} {this-application}, then delete its installation directory. It writes nothing outside it, except a
+PostgreSQL schema if one was created from `db.sql`, which can be dropped separately.

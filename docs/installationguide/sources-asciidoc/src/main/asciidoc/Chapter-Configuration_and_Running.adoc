@@ -1,0 +1,42 @@
+[[_configuration_and_running]]
+= Configuration and Running
+
+[[_configuration]]
+== Configuration
+
+Everything {this-application} reads at start-up is in `conf/`:
+
+`diameter-server.xml`::
+  The jDiameter configuration: the local peer (its URI, its addresses for multi-homing, its realm and the applications it
+  supports), the peers it connects to or accepts connections from, and the realms with the applications routed to each.
+`naikeri-signaling-gateway.xml`::
+  The routing rules, which match on origin host and realm, destination host and realm, IMSI and subscription ID, and send
+  each request to a routing host by priority and load share; and the Diameter layer {this-application} runs on.
+`dictionary.xml`::
+  The Diameter dictionary. It comes from jDiameter and normally needs no change.
+`application.yaml` and `db.sql`::
+  The PostgreSQL connection, and the script creating its schema, for realm and application data kept in a database.
+  Not needed when the realms are configured in `diameter-server.xml`.
+`log4j2.xml`::
+  The logging configuration.
+
+The {this-platform} {this-application} Admin Guide describes the routing rules in detail.
+
+[[_running]]
+== Running
+
+[source,bash]
+----
+bin/start.sh
+----
+
+`start.sh` runs from its own directory, so it can be started from anywhere. It starts the JVM with a 1 GB heap; to change
+it, edit the `-Xms` and `-Xmx` values in the script. Console output goes to the terminal and to `logs/console.out`.
+
+`bin/dra-cli.sh` opens an interactive prompt for the management commands.
+
+[[_stopping]]
+== Stopping
+
+Ctrl-C in the terminal, or a SIGTERM to the `start.sh` process, stops {this-application} cleanly: the script passes the
+signal on to the JVM and waits for it to end.

@@ -1,11 +1,8 @@
+[[_introduction]]
 = Introduction
 
-{this-platform} {this-application} is ...
+{this-platform} {this-application} is a Diameter Routing Agent built on the {this-platform} Signaling Gateway and jDiameter.
+It routes Diameter requests between peers by configurable rules, over SCTP with multi-homing.
 
-jDiameter is a software based implementation of the Diameter protocol. {this-platform} {this-application} uses the implementation of Diameter reference points....
-
-{this-platform} {this-application} makes use of HTTP protocol between the gateway and third-party applications or Value-Added Services (VAS) modules.
-The HTTP callback mechanism allows the third-party application to be agnostic of Operating System, Programming Language and Framework.
-
-This guide will assist you in installing {this-platform} {this-application} .
-For more details on configuring and using the platform, please refer to the {this-platform} {this-application} User Guide.
+This guide covers installing {this-platform} {this-application}, configuring the essentials, running it and removing it.
+Its routing rules and Diameter configuration are described in the {this-platform} {this-application} Admin Guide.

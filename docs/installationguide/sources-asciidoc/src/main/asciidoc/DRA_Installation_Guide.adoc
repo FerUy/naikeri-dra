@@ -34,7 +34,13 @@ include::Chapter-Pre-Requisites.adoc[]
 
 :leveloffset: 1
 
-include::Chapter-Post_Installation_Configuration.adoc[]
+include::Chapter-Installation.adoc[]
+
+:leveloffset: 0
+
+:leveloffset: 1
+
+include::Chapter-Configuration_and_Running.adoc[]
 
 :leveloffset: 0
 

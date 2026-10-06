@@ -5,7 +5,7 @@
 = Revision History
 
 .Admin Guide Revision History Details
-[width="100%", cols="5%,20%,25%,50%"]
+[width="100%", cols="12%,20%,23%,45%"]
 |=================================================================================================================================================================================================================================
 | VERSION | DATE | AUTHOR | DESCRIPTION
 | 1.0.0 | June 1st, 2020 | Alejandro Ferreira, Fernando Mendioroz, Joram Herrera | Release 1.0.0 Admin Guide first version.

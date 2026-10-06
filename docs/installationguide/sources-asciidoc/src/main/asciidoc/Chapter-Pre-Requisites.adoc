@@ -1,18 +1,14 @@
+[[_prerequisites]]
 = Pre-Requisites
 
-{this-platform} {this-application} 's core requirement is Java.
-The following table details the Hardware, Operating System and Software requirements for a clean installation of {this-platform} {this-application}.
- 
-
 .Installation Pre-Requisites
-[cols="1,1,1", frame="all", options="header"]
+[cols="1,3", frame="all", options="header"]
 |===
-| Component | Requirement | Notes
-| System Requirements | Intel Pentium 1.5 GHz or faster. Hard disk space of at least 50GB. RAM of at least 4 GB for PoC and 16 GB for production | The higher the RAM and processing power, the better the throughput
-| Operating System | The platform can be installed on any OS that supports Java and SCTP. But native libraries for SS7 cards are compiled only for Linux at the moment and therefore supported only on Linux Operating System. | CentOS 7, RHEL 6.5 or later or Ubuntu 18.04 LTS or later are recommended.
-| Java | You must have a working Java Runtime Environment (JRE) or Java Development Kit (JDK) version 11 installed on your system. |
-| Firewall Access | You must ensure that you have appropriate firewall permissions to allow Diameter traffic on the ports configured for the local peer, and access to the port used by the CLI. | 
-| SCTP libraries | You must have the lksctp library installed for SIGTRAN (M3UA). The Linux Kernel Stream Control Transmission Protocol (lksctp) library provides SCTP implementation. | For more details on downloading and installing lksctp, please refer to http://lksctp.sourceforge.net/
+| Component | Requirement
+| Operating system | Linux, with SCTP support in the kernel. {this-platform} {this-application} is tested on Ubuntu LTS.
+| Java | A Java 11 runtime (JRE or JDK) on the `PATH`. The appendix of this guide describes installing one.
+| SCTP library | The `lksctp-tools` package, which the Java runtime needs to open SCTP associations.
+| Memory | `bin/start.sh` starts the JVM with a 1 GB heap (`-Xms1g -Xmx1g`): allow for it, plus the operating system.
+| Network | The SCTP port of the local Diameter peer (3868 in the configuration shipped) open between {this-application} and its peers, on every address used for multi-homing.
+| PostgreSQL | Optional: only needed when realm and application data are kept in a database rather than in `diameter-server.xml`.
 |===
-
-IMPORTANT: You must ensure that the `JAVA_HOME` environment variables are set properly for the user account(s) that will run the server.
